@@ -2772,6 +2772,7 @@ cmd void vkGetDeviceQueue(
 @DrawCall
 @threadSafety("app")
 @indirect("VkQueue", "VkDevice")
+@has_subcommands
 cmd VkResult vkQueueSubmit(
     VkQueue             queue,
     u32                 submitCount,

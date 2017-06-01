@@ -141,7 +141,7 @@ type (
 	StateFlags struct {
 		Gapis GapisFlags
 		Gapir GapirFlags
-		At    int `help:"command index to get the state after."`
+		At    []int `help:"command index to get the state after."`
 	}
 	TraceFlags struct {
 		Gapii GapiiFlags

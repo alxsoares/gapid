@@ -120,6 +120,7 @@
 {{/*
 -------------------------------------------------------------------------------
   Emits the Mutate() and Call() functions for the specified command.
+  Emits MutateSubcommands() if the call has subcommands
 -------------------------------------------------------------------------------
 */}}
 {{define "DeclareMutate"}}
@@ -128,6 +129,7 @@
 
     {{$name := $ | GoCommandName}}
     {{$r    := not (GetAnnotation $ "no_replay")}}
+    {{$sub    := (GetAnnotation $ "has_subcommands")}}
 
     var _ = atom.Atom(&{{$name}}{}) // interface compliance check
 
@@ -158,6 +160,33 @@
 
       return nil
     }
+
+    {{if $sub}}
+      // MutateSubcommands performs the necessary state-mutation and memory
+      // observations for {{$.Name}} up to the given subcommand indices.
+      // If ϟb is not nil, MutateSubcommands also emits the replay instructions to call {{$.Name}}().
+      {{if not (IsVoid $.Return.Type)}}
+        // Upon returning the {{$.Name}}() return value will be stored on the stack.
+      {{end}}
+      func (ϟa *{{$name}}) MutateSubcommands(ϟctx context.Context, ϟs *gfxapi.State,§
+         ϟb *builder.Builder, ϟi ...uint64) error {
+
+        {{if not $r}}ϟb = nil // @no_replay{{end}}
+
+        ϟc := GetState(ϟs)
+        ϟl := ϟs.MemoryLayout
+        ϟo := ϟa.Extras().Observations()
+        _, _ = ϟc, ϟl
+
+        {{Global "CurrentFunction" $}}
+
+        {{/* simulate the call */}}
+        ϟo.ApplyReads(ϟs.Memory[ϟmem.ApplicationPool])
+        {{Template "Block" $.Block}}
+
+        return nil
+      }
+    {{end}}
 
     {{if $r}}
       // Call builds the replay instructions to push the arguments to the stack and invoke {{$.Name}}().
